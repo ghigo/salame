@@ -1,6 +1,7 @@
 # Salame!
 
 from led import Led
+from temphumid import Temphumid
 
 class Salame(object):
 
@@ -12,6 +13,12 @@ class Salame(object):
 		# led.blink(10)
 		# led.blink_for(5, 0.15, 0.3)
 		led.blink_twice()
+
+		th = Temphumid(4)
+		h, t = th.read()
+		print t
+		print h
+
 
 
 # init app
