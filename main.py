@@ -1,8 +1,14 @@
 # Salame!
 
+import datetime
+import time
+
+from google_logger import Google_spreadsheet
 from led import Led
 from temphumid import Temphumid
-import time
+
+# Google Docs spreadsheet name.
+GDOCS_SPREADSHEET_NAME = 'Temp-umid test'
 
 class Salame(object):
 
@@ -11,6 +17,7 @@ class Salame(object):
 		print "Welcome to Salame!"
 		self.led = Led(11)
 		self.th_sensor = Temphumid(4)
+		self.data_logger = Google_spreadsheet(GDOCS_SPREADSHEET_NAME)
 
 		# Start monitoring
 		self.monitor()
@@ -19,11 +26,14 @@ class Salame(object):
 	def monitor(self):
 		while True:
 			humidity, temp = self.th_sensor.read()
-			self.led.blink()
-			print 'Temperature: {0:0.1f} C'.format(temp)
-			print 'Humidity:    {0:0.1f} %'.format(humidity)
-			time.sleep(5)
-
+			if humidity is not None and temp is not None:
+				self.led.blink()
+				print 'Temperature: {0:0.1f} C'.format(temp)
+				print 'Humidity:    {0:0.1f} %'.format(humidity)
+				self.data_logger.log([datetime.datetime.now(), temp, humidity])
+				time.sleep(5)
+			else:
+				self.led.blink_twice()
 
 
 	def test(self):
