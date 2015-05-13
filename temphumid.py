@@ -1,5 +1,4 @@
 import Adafruit_DHT
-import sys
 
 class Temphumid(object):
 	"""Read temperature and humidity from a DHT22 sensor"""
