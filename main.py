@@ -5,6 +5,7 @@ import time
 
 from google_logger import Google_spreadsheet
 from led import Led
+from switch import Switch
 from temphumid import Temphumid
 
 # Google Docs spreadsheet name.
@@ -18,6 +19,15 @@ class Salame(object):
 		self.led = Led(11)
 		self.th_sensor = Temphumid(4)
 		self.data_logger = Google_spreadsheet(GDOCS_SPREADSHEET_NAME)
+
+		self.sample_switch = Switch(13)
+		self.sample_switch.on()
+		print "sample_switch status"
+		print self.sample_switch.get_status()
+		time.sleep(2)
+		self.sample_switch.off()
+		print "sample_switch status"
+		print self.sample_switch.get_status()
 
 		# Start monitoring
 		self.monitor()
