@@ -18,20 +18,18 @@ class Google_spreadsheet(object):
 	def login_open_sheet(self, oauth_key_file, spreadsheet):
 		"""Connect to Google Docs spreadsheet and return the first worksheet."""
 
-		# try:
-		file = open(os.path.dirname(__file__) + oauth_key_file)
-		json_key = json.load(file)
-		print "credentials"
-		print json_key
+		try:
+			file = open(os.path.dirname(__file__) + oauth_key_file)
+			json_key = json.load(file)
 
-		credentials = SignedJwtAssertionCredentials(json_key['client_email'],
-													json_key['private_key'],
-													['https://spreadsheets.google.com/feeds'])
-		gc = gspread.authorize(credentials)
-		worksheet = gc.open(spreadsheet).sheet1
-		return worksheet
-		# except:
-		# 	print 'Unable to login and get spreadsheet. Check OAuth credentials, spreadsheet name, and make sure spreadsheet is shared to the client_email address in the OAuth .json file!'
+			credentials = SignedJwtAssertionCredentials(json_key['client_email'],
+														json_key['private_key'],
+														['https://spreadsheets.google.com/feeds'])
+			gc = gspread.authorize(credentials)
+			worksheet = gc.open(spreadsheet).sheet1
+			return worksheet
+		except:
+			print 'Unable to login and get spreadsheet. Check OAuth credentials, spreadsheet name, and make sure spreadsheet is shared to the client_email address in the OAuth .json file!'
 
 
 	def log(self, row):

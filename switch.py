@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 
 class Switch(object):
-	"""An Switch class"""
+	"""A Switch class"""
 
 	def __init__(self, pin):
 		self.pin = pin
@@ -11,6 +11,7 @@ class Switch(object):
 		GPIO.setmode(GPIO.BOARD)
 		GPIO.setup(pin, 0)
 
+	# todo: this should be private
 	def set_status(self, status):
 		self.status = status
 		GPIO.output(self.pin, status)
