@@ -1,3 +1,4 @@
+import logging
 import RPi.GPIO as GPIO
 import time
 
@@ -8,8 +9,9 @@ DURATION_NORMAL = 1
 class Led(object):
 	"""An LED class"""
 
-	def __init__(self, pin):
+	def __init__(self, pin, name):
 		self.pin = pin
+		self.name = name
 
 		# Setup GPIO
 		GPIO.setmode(GPIO.BOARD)

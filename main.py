@@ -44,7 +44,7 @@ class Salame(object):
     logging.debug('Salame started')
 
     # Create objects
-    self.led = Led(11)
+    self.led = Led(11, 'LED-yellow')
     self.th_sensor = Temphumid(4)
     self.data_logger = Google_spreadsheet(GDOCS_SPREADSHEET_NAME)
 
@@ -52,7 +52,7 @@ class Salame(object):
     self.alert_started_worker = threading.Thread(target=self.alert_started)
     self.alert_started_worker.setDaemon(True)
     self.fridge_monitor_worker = threading.Thread(target=self.fridge_monitor)
-    self.fridge_monitor_worker_.setDaemon(True)
+    self.fridge_monitor_worker.setDaemon(True)
 
     # Start threads
     self.alert_started_worker.start()
@@ -84,7 +84,7 @@ class Salame(object):
 
   def alert_started(self):
     """Turn on red led when the app starts"""
-    self.sample_switch = Switch(13)
+    self.sample_switch = Switch(13, 'LED-red')
     self.sample_switch.on()
     print "sample_switch status"
     print self.sample_switch.get_status()
@@ -97,7 +97,7 @@ class Salame(object):
   def test(self):
     print "testing..."
 
-    led = Led(11)
+    led = Led(11, 'LED-red')
     # led.blink(10)
     # led.blink_for(5, 0.15, 0.3)
     led.blink_twice()
