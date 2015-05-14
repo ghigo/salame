@@ -6,6 +6,7 @@ import os.path
 import RPi.GPIO as GPIO
 import threading
 import time
+import traceback
 import sys
 
 from google_logger import Google_spreadsheet
@@ -31,8 +32,12 @@ class Salame(object):
     try:
       self.main()
     except KeyboardInterrupt:
+      logging.debug('exit regularly')
       self.exit()
       sys.exit(0)
+      raise
+    except:
+      logging.error(traceback.format_exc())
       raise
 
   def main(self):
@@ -47,7 +52,7 @@ class Salame(object):
     self.alert_started_worker = threading.Thread(target=self.alert_started)
     self.alert_started_worker.setDaemon(True)
     self.fridge_monitor_worker = threading.Thread(target=self.fridge_monitor)
-    self.fridge_monitor_worker.setDaemon(True)
+    self.fridge_monitor_worker_.setDaemon(True)
 
     # Start threads
     self.alert_started_worker.start()
