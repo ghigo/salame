@@ -22,7 +22,7 @@ LOG_FILEPATH = 'logs.log'
 logging.basicConfig(
   filename = LOG_FILEPATH,
   level = logging.DEBUG,
-  format = '%(asctime)s %(message)s')
+  format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
 class Salame(object):
