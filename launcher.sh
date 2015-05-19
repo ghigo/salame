@@ -4,7 +4,7 @@
 # Remember to: chmod 755 launcher.sh
 #
 # Add to chronjob:
-# crontab -e
+# sudo crontab -e
 # Add line:
 # @reboot sh /home/pi/salame/launcher.sh >/home/pi/logs/cronlog.log 2>&1
 
