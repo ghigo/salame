@@ -18,7 +18,8 @@ from temphumid import Temphumid
 GDOCS_SPREADSHEET_NAME = 'Temp-umid test'
 
 # Logging
-LOG_FILEPATH = 'logs.log'
+# filepath needs to be an absolute path so that the script run by the root user through crontab can write the logs
+LOG_FILEPATH = '/home/pi/salame/logs.log'
 logging.basicConfig(
   filename = LOG_FILEPATH,
   level = logging.DEBUG,
@@ -32,6 +33,7 @@ class Salame(object):
     try:
       self.main()
     except KeyboardInterrupt:
+      print 'exit regularly'
       logging.debug('exit regularly')
       self.exit()
       sys.exit(0)
@@ -41,10 +43,12 @@ class Salame(object):
       raise
 
   def main(self):
+    print 'Salame started'
     logging.debug('Salame started')
 
     # Create objects
-    self.led = Led(11, 'LED-yellow')
+    self.led1 = Led(11, 'LED-yellow-1')
+    self.led2 = Led(15, 'LED-yellow-2')
     self.th_sensor = Temphumid(4)
     self.data_logger = Google_spreadsheet(GDOCS_SPREADSHEET_NAME)
 
@@ -67,47 +71,33 @@ class Salame(object):
     """Cleanup stuff and exit"""
     # Cleanup GPIO
     GPIO.cleanup()
+    logging.shutdown()
 
 
   def fridge_monitor(self):
     while True:
       humidity, temp = self.th_sensor.read()
       if humidity is not None and temp is not None:
-        self.led.blink()
-        print 'Temperature: {0:0.1f} C'.format(temp)
-        print 'Humidity:    {0:0.1f} %'.format(humidity)
+        self.led1.blink()
+        # print 'Temperature: {0:0.1f} C'.format(temp)
+        # print 'Humidity:    {0:0.1f} %'.format(humidity)
         self.data_logger.log([datetime.datetime.now(), temp, humidity])
         time.sleep(5)
       else:
-        self.led.blink_twice()
+        self.led2.blink_twice()
 
 
   def alert_started(self):
     """Turn on red led when the app starts"""
     self.sample_switch = Switch(13, 'LED-red')
     self.sample_switch.on()
-    print "sample_switch status"
-    print self.sample_switch.get_status()
+    # print "sample_switch status"
+    # print self.sample_switch.get_status()
     time.sleep(10)
     self.sample_switch.off()
-    print "sample_switch status"
-    print self.sample_switch.get_status()
+    # print "sample_switch status"
+    # print self.sample_switch.get_status()
 
-
-  def test(self):
-    print "testing..."
-
-    led = Led(11, 'LED-red')
-    # led.blink(10)
-    # led.blink_for(5, 0.15, 0.3)
-    led.blink_twice()
-
-    th = Temphumid(4)
-    h, t = th.read()
-    print t
-    print h
-
-    print "Finished testing."
 
 # init app
 app = Salame()
