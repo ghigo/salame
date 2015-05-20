@@ -16,6 +16,7 @@ class Led(object):
 		# Setup GPIO
 		GPIO.setmode(GPIO.BOARD)
 		GPIO.setup(pin, GPIO.OUT)
+		GPIO.output(pin, False)
 
 	def blink(self, duration=DURATION_NORMAL):
 		"""Blink once"""

@@ -39,6 +39,8 @@ class Salame(object):
       sys.exit(0)
       raise
     except:
+      print 'exception:'
+      print traceback.format_exc()
       logging.error(traceback.format_exc())
       raise
 
@@ -84,7 +86,7 @@ class Salame(object):
         self.data_logger.log([datetime.datetime.now(), temp, humidity])
         time.sleep(5)
       else:
-        self.led2.blink_twice()
+        self.led1.blink_twice()
 
 
   def alert_started(self):
