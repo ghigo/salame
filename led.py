@@ -7,30 +7,30 @@ DURATION_SHORT = 0.5
 DURATION_NORMAL = 1
 
 class Led(object):
-	"""An LED class"""
+  """An LED class"""
 
-	def __init__(self, pin, name):
-		self.pin = pin
-		self.name = name
+  def __init__(self, pin, name):
+    self.pin = pin
+    self.name = name
 
-		# Setup GPIO
-		GPIO.setmode(GPIO.BOARD)
-		GPIO.setup(pin, GPIO.OUT)
-		GPIO.output(pin, False)
+    # Setup GPIO
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(pin, GPIO.OUT)
+    GPIO.output(pin, False)
 
-	def blink(self, duration=DURATION_NORMAL):
-		"""Blink once"""
-		print 'Led blink'
-		GPIO.output(self.pin, True)
-		time.sleep(duration)
-		GPIO.output(self.pin, False)
+  def blink(self, duration=DURATION_NORMAL):
+    """Blink once"""
+    print 'Led blink'
+    GPIO.output(self.pin, True)
+    time.sleep(duration)
+    GPIO.output(self.pin, False)
 
-	def blink_for(self, times=10, light=DURATION_NORMAL, sleep=DURATION_NORMAL):
-		"""Blink specifying time, light duration and sleep duration"""
-		for x in range(0, times):
-			self.blink(light)
-			time.sleep(sleep)
+  def blink_for(self, times=10, light=DURATION_NORMAL, sleep=DURATION_NORMAL):
+    """Blink specifying time, light duration and sleep duration"""
+    for x in range(0, times):
+      self.blink(light)
+      time.sleep(sleep)
 
-	def blink_twice(self):
-		"""Blink twice"""
-		self.blink_for(2, DURATION_VERY_SHORT, DURATION_VERY_SHORT)
+  def blink_twice(self):
+    """Blink twice"""
+    self.blink_for(2, DURATION_VERY_SHORT, DURATION_VERY_SHORT)
