@@ -112,18 +112,18 @@ class Salame(object):
 
 
   def control_elements(self, humid, temp):
-    if temp > settings['temperature']:
+    if temp > settings['temperature'] + settings['temperature_tollerance']:
       self.fridge.on()
       print "fridge on"
-    else:
+    elif temp < settings['temperature'] - settings['temperature_tollerance']:
       self.fridge.off()
       print "fridge off"
 
-    if humid > settings['humidity']:
+    if humid > settings['humidity'] + settings['humidity_tollerance']:
       self.fan.on()
       self.humidifier.off()
       print "humid off"
-    else:
+    elif settings['humidity'] - settings['humidity_tollerance']:
       self.fan.off()
       self.humidifier.on()
       print "humid on"
