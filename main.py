@@ -11,6 +11,7 @@ import sys
 
 from google_logger import Google_spreadsheet
 from button import Button
+from humidifier import Humidifier
 from led import Led
 from relay import Relay
 from switch import Switch
@@ -30,7 +31,7 @@ logging.basicConfig(
 settings = {
   'temperature': 25,
   'temperature_tollerance': 2,
-  'humidity': 50,
+  'humidity': 60,
   'humidity_tollerance': 5
 }
 
@@ -62,13 +63,14 @@ class Salame(object):
     self.led2 = Led(15, 'LED-yellow-2')
     self.th_sensor = Temphumid(4)
     self.fridge = Relay(12, 'Fridge')
-    self.humidifier = Button(16, 'Humidifier')
+    self.humidifier = Humidifier(18, 16, 'Humidifier')
     self.fan = Relay(12, 'Fan')
     self.data_logger = Google_spreadsheet(GDOCS_SPREADSHEET_NAME)
 
     # self.tmp_test_relay()
     # self.tmp_test_button()
     # self.random()
+    # self.tmp_relay()
 
     # Create threads
     self.alert_started_worker = threading.Thread(target=self.alert_started)
@@ -119,14 +121,22 @@ class Salame(object):
       self.fridge.off()
       print "fridge off"
 
+    if humid > settings['humidity']:
+      self.humidifier.off()
+      self.fan.off()
+
     if humid > settings['humidity'] + settings['humidity_tollerance']:
       self.fan.on()
       self.humidifier.off()
       print "humid off"
-    elif settings['humidity'] - settings['humidity_tollerance']:
+    elif humid < settings['humidity'] - settings['humidity_tollerance']:
       self.fan.off()
-      self.humidifier.on()
+      self.humidifier.on_for(2)
       print "humid on"
+    elif humid > settings['humidity']:
+      self.humidifier.off()
+    elif humid < settings['humidity']:
+      self.fan.off()
 
 
   def alert_started(self):
@@ -148,6 +158,13 @@ class Salame(object):
 
 
 # ------------ TEST
+
+  def tmp_relay(self):
+    relay = Relay(12, 'tmp_relay')
+    relay.on()
+    relay2 = Relay(22, 'tmp_relay2')
+    relay2.on()
+    time.sleep(120)
 
   def random(self):
     self.fan1 = Relay(12, 'Fan')
