@@ -24,15 +24,19 @@ GDOCS_SPREADSHEET_NAME = 'Temp-umid test'
 # filepath needs to be an absolute path so that the script run by the root user through crontab can write the logs
 LOG_FILEPATH = '/home/pi/salame/logs.log'
 logging.basicConfig(
-  # filename = LOG_FILEPATH,
+  filename = LOG_FILEPATH,
   level = logging.DEBUG,
   format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 settings = {
-  'temperature': 25,
-  'temperature_tollerance': 2,
-  'humidity': 60,
-  'humidity_tollerance': 5
+  'temperature': 19.5,
+  'temperature_tollerance': 0.1,
+  'humidity': 72,
+  'humidity_tollerance': 10
+}
+
+pin = {
+  'relay1': 0
 }
 
 
@@ -62,7 +66,7 @@ class Salame(object):
     self.led1 = Led(11, 'LED-yellow-1')
     self.led2 = Led(15, 'LED-yellow-2')
     self.th_sensor = Temphumid(4)
-    self.fridge = Relay(12, 'Fridge')
+    self.fridge = Relay(22, 'Fridge')
     self.humidifier = Humidifier(18, 16, 'Humidifier')
     self.fan = Relay(12, 'Fan')
     self.data_logger = Google_spreadsheet(GDOCS_SPREADSHEET_NAME)
@@ -114,10 +118,11 @@ class Salame(object):
 
 
   def control_elements(self, humid, temp):
-    if temp > settings['temperature'] + settings['temperature_tollerance']:
+    if temp > settings['temperature'] - settings['temperature_tollerance']:
       self.fridge.on()
       print "fridge on"
-    elif temp < settings['temperature'] - settings['temperature_tollerance']:
+    elif temp < settings['temperature'] + settings['temperature_tollerance']:
+      # The fridge stops at the top level because the temp will decrease for some time after it goes off
       self.fridge.off()
       print "fridge off"
 
@@ -125,7 +130,7 @@ class Salame(object):
       self.humidifier.off()
       self.fan.off()
 
-    if humid > settings['humidity'] + settings['humidity_tollerance']:
+    if humid > settings['humidity'] - settings['humidity_tollerance']:
       self.fan.on()
       self.humidifier.off()
       print "humid off"
@@ -162,8 +167,8 @@ class Salame(object):
   def tmp_relay(self):
     relay = Relay(12, 'tmp_relay')
     relay.on()
-    relay2 = Relay(22, 'tmp_relay2')
-    relay2.on()
+    # relay2 = Relay(22, 'tmp_relay2')
+    # relay2.on()
     time.sleep(120)
 
   def random(self):
