@@ -26,7 +26,8 @@ class Switch(object):
     logging.debug('switch %s - set_status %s', self.name, self.get_status())
 
   def get_status(self):
-    return self.status
+    # convert to boolean
+    return not (not self.status)
 
   def on(self):
     """Turn on"""
