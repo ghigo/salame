@@ -30,9 +30,9 @@ logging.basicConfig(
   format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 settings = {
-  'temperature': 16,
+  'temperature': 15,
   'temperature_tollerance': 0.5,
-  'humidity': 70,
+  'humidity': 80,
   'humidity_tollerance': 5
 }
 
@@ -182,14 +182,6 @@ class Salame(object):
       print "code should never get here!"
 
 
-    # if temperature > settings['temperature'] - settings['temperature_tollerance']:
-    #   self.fridge.on()
-    #   print "fridge on"
-    # elif temperature < settings['temperature'] + settings['temperature_tollerance']:
-    #   # The fridge stops at the top level because the temp will decrease for some time after it goes off
-    #   self.fridge.off()
-    #   print "fridge off"
-
     # humidity
     # if humidity > settings['humidity']:
     #   self.humidifier.off()
@@ -201,26 +193,21 @@ class Salame(object):
       print "humid off"
     elif humidity < settings['humidity'] - settings['humidity_tollerance']:
       self.fan.off()
-      humidifier_duration = math.pow(((settings['humidity'] - humidity) / 10 + 2), 2)
+      humidifier_duration = math.pow(((settings['humidity'] - humidity) / 10 + 3), 2)
       self.humidifier.on_for(humidifier_duration)
       print "humidifier on for ", humidifier_duration
-
-    # elif humidity > settings['humidity']:
-    #   self.humidifier.off()
-    # elif humidity < settings['humidity']:
-    #   self.fan.off()
+    elif humidity > settings['humidity']:
+      self.humidifier.off()
+    elif humidity < settings['humidity']:
+      self.fan.off()
 
 
   def alert_started(self):
     """Turn on red led when the app starts"""
     self.sample_switch = Switch(13, 'LED-red')
     self.sample_switch.on()
-    # print "sample_switch status"
-    # print self.sample_switch.get_status()
-    time.sleep(10)
+    time.sleep(5)
     self.sample_switch.off()
-    # print "sample_switch status"
-    # print self.sample_switch.get_status()
 
 
 
