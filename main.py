@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import math
 import os.path
 import RPi.GPIO as GPIO
 import threading
@@ -18,7 +19,7 @@ from switch import Switch
 from temphumid import Temphumid
 
 # Google Docs spreadsheet name.
-GDOCS_SPREADSHEET_NAME = 'Temp-umid test'
+GDOCS_SPREADSHEET_NAME = 'salame-logs'
 
 # Logging
 # filepath needs to be an absolute path so that the script run by the root user through crontab can write the logs
@@ -29,21 +30,16 @@ logging.basicConfig(
   format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 settings = {
-  'temperature': 19.5,
-  'temperature_tollerance': 0.1,
-  'humidity': 72,
-  'humidity_tollerance': 10
-}
-
-pin = {
-  'relay1': 0
+  'temperature': 16,
+  'temperature_tollerance': 0.5,
+  'humidity': 70,
+  'humidity_tollerance': 5
 }
 
 
 class Salame(object):
 
   def __init__(self):
-
     try:
       self.main()
     except KeyboardInterrupt:
@@ -61,6 +57,13 @@ class Salame(object):
   def main(self):
     print 'Salame started'
     logging.debug('Salame started')
+
+    # Keep the previous values to evaluate if temp and humid values are increasing or decreasing
+    self.prev_t = settings['temperature']
+    self.prev_h = settings['humidity']
+    # current values
+    self.cur_t = 0
+    self.cur_h = 0
 
     # Create objects
     self.led1 = Led(11, 'LED-yellow-1')
@@ -98,17 +101,40 @@ class Salame(object):
     logging.shutdown()
 
 
+  def log_values(self, humidity, temperature):
+    """
+    row:
+      time
+      humidity
+      temperature
+      target_humidity
+      target_temperature
+      humidity tollerance
+      temperature tollerance
+      fridge status
+      fan status
+      humidifier status
+    """
+    row = [datetime.datetime.now(), humidity, temperature, settings['humidity'], settings['temperature'], settings['humidity_tollerance'], settings['temperature_tollerance'], self.fridge.get_status(), self.fan.get_status(), self.humidifier.get_status()]
+    self.data_logger.log(row)
+
+
   def fridge_monitor(self):
+    """monitor fridge components"""
     while True:
-      humidity, temp = self.th_sensor.read()
-      if humidity is not None and temp is not None:
+      self.prev_h = self.cur_h
+      self.prev_t = self.cur_t
+      humidity, temperature = self.th_sensor.read()
+      if humidity is not None and temperature is not None:
         self.led1.blink()
-        # print 'Temperature: {0:0.1f} C'.format(temp)
-        # print 'Humidity:    {0:0.1f} %'.format(humidity)
-        self.control_elements(humidity, temp)
+        self.cur_h = humidity
+        self.cur_t = temperature
+        self.control_elements(humidity, temperature)
 
         # todo put in a separate thread in order not to interrupt the main program in case of failure or delay
-        self.data_logger.log([datetime.datetime.now(), temp, humidity])
+        # self.data_logger.log([datetime.datetime.now(), humidity, temperature])
+        self.log_values(humidity, temperature);
+
         # self.fridge_monitor_worker = threading.Thread(target=self.fridge_monitor)
         # self.fridge_monitor_worker.setDaemon(True)
 
@@ -117,31 +143,72 @@ class Salame(object):
         self.led1.blink_twice()
 
 
-  def control_elements(self, humid, temp):
-    if temp > settings['temperature'] - settings['temperature_tollerance']:
+  def control_elements(self, humidity, temperature):
+    """take decisions based on parameters"""
+
+    # max and min temperatures tollerated
+    max_t = settings['temperature'] + settings['temperature_tollerance']
+    min_t = settings['temperature'] - settings['temperature_tollerance']
+    # temperature
+    if temperature >= max_t:
+      # Zone A: higher than max
       self.fridge.on()
-      print "fridge on"
-    elif temp < settings['temperature'] + settings['temperature_tollerance']:
-      # The fridge stops at the top level because the temp will decrease for some time after it goes off
+      print "fridge zone A - on"
+    elif temperature <= min_t:
+      # Zone D: lower than min
       self.fridge.off()
-      print "fridge off"
+      print "fridge zone D - off"
+    elif (temperature > settings['temperature']) & (temperature < max_t):
+      # Zone B: between target and max
+      if self.prev_t > temperature:
+        # temp decreasing
+        self.fridge.off()
+        print "fridge zone B - off"
+      elif self.prev_t < temperature:
+        # temp increasing
+        self.fridge.on()
+        print "fridge zone B - on"
+    elif (temperature < settings['temperature']) & (temperature > min_t):
+      # Zone C: between target and min
+      if self.prev_t > temperature:
+        # temp decreasing
+        self.fridge.off()
+        print "fridge zone C - off"
+      elif self.prev_t < temperature:
+        # temp increasing
+        self.fridge.on()
+        print "fridge zone C - on"
+    else:
+      print "code should never get here!"
 
-    if humid > settings['humidity']:
-      self.humidifier.off()
-      self.fan.off()
 
-    if humid > settings['humidity'] - settings['humidity_tollerance']:
+    # if temperature > settings['temperature'] - settings['temperature_tollerance']:
+    #   self.fridge.on()
+    #   print "fridge on"
+    # elif temperature < settings['temperature'] + settings['temperature_tollerance']:
+    #   # The fridge stops at the top level because the temp will decrease for some time after it goes off
+    #   self.fridge.off()
+    #   print "fridge off"
+
+    # humidity
+    # if humidity > settings['humidity']:
+    #   self.humidifier.off()
+    #   self.fan.off()
+
+    if humidity > settings['humidity'] + settings['humidity_tollerance']:
       self.fan.on()
       self.humidifier.off()
       print "humid off"
-    elif humid < settings['humidity'] - settings['humidity_tollerance']:
+    elif humidity < settings['humidity'] - settings['humidity_tollerance']:
       self.fan.off()
-      self.humidifier.on_for(2)
-      print "humid on"
-    elif humid > settings['humidity']:
-      self.humidifier.off()
-    elif humid < settings['humidity']:
-      self.fan.off()
+      humidifier_duration = math.pow(((settings['humidity'] - humidity) / 10 + 2), 2)
+      self.humidifier.on_for(humidifier_duration)
+      print "humidifier on for ", humidifier_duration
+
+    # elif humidity > settings['humidity']:
+    #   self.humidifier.off()
+    # elif humidity < settings['humidity']:
+    #   self.fan.off()
 
 
   def alert_started(self):
