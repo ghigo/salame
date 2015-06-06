@@ -29,12 +29,17 @@ logging.basicConfig(
   level = logging.DEBUG,
   format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
+# Settings
+# todo: read values from a file
 settings = {
   'temperature': 15,
   'temperature_tollerance': 0.5,
   'humidity': 80,
   'humidity_tollerance': 5
 }
+
+# Buffer for google spreadsheet logs. Each item is a row (array)
+remote_logs = []
 
 
 class Salame(object):
@@ -84,10 +89,12 @@ class Salame(object):
     self.alert_started_worker.setDaemon(True)
     self.fridge_monitor_worker = threading.Thread(target=self.fridge_monitor)
     self.fridge_monitor_worker.setDaemon(True)
-
+    self.logger_worker = threading.Thread(target=self.write_logs)
+    self.logger_worker.setDaemon(True)
     # Start threads
     self.alert_started_worker.start()
     self.fridge_monitor_worker.start()
+    self.logger_worker.start()
 
     # keep the app running until all the threads terminate
     while threading.active_count() > 0:
@@ -103,6 +110,8 @@ class Salame(object):
 
   def log_values(self, humidity, temperature):
     """
+    Format values to log in google spreadsheet
+
     row:
       time
       humidity
@@ -115,8 +124,10 @@ class Salame(object):
       fan status
       humidifier status
     """
+    print "log_values", datetime.datetime.now()
     row = [datetime.datetime.now(), humidity, temperature, settings['humidity'], settings['temperature'], settings['humidity_tollerance'], settings['temperature_tollerance'], self.fridge.get_status(), self.fan.get_status(), self.humidifier.get_status()]
-    self.data_logger.log(row)
+    # self.data_logger.log(row)
+    remote_logs.append(row)
 
 
   def fridge_monitor(self):
@@ -138,9 +149,19 @@ class Salame(object):
         # self.fridge_monitor_worker = threading.Thread(target=self.fridge_monitor)
         # self.fridge_monitor_worker.setDaemon(True)
 
-        time.sleep(5)
+        time.sleep(20)
       else:
         self.led1.blink_twice()
+
+  def write_logs(self):
+    while True:
+      print "len(remote_logs) = ", len(remote_logs)
+      if (len(remote_logs) > 0):
+        for x in range(0, len(remote_logs)):
+          row = remote_logs.pop(0)
+          self.data_logger.log(row)
+          print "logger wrote a row"
+      time.sleep(30)
 
 
   def control_elements(self, humidity, temperature):
@@ -193,7 +214,7 @@ class Salame(object):
       print "humid off"
     elif humidity < settings['humidity'] - settings['humidity_tollerance']:
       self.fan.off()
-      humidifier_duration = math.pow(((settings['humidity'] - humidity) / 10 + 3), 2)
+      humidifier_duration = math.pow(((settings['humidity'] - humidity) / 10 + 1), 3)
       self.humidifier.on_for(humidifier_duration)
       print "humidifier on for ", humidifier_duration
     elif humidity > settings['humidity']:
