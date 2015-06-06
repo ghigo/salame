@@ -11,6 +11,7 @@ class Humidifier():
     self.power_relay = Relay(power_pin, name + '_power_relay', 0)
     self.button = Button(button_pin, name + '_button', 0)
     self.status = 0
+    self.nominal_status = 0
 
   def set_status(self, status):
     if status == 0:
@@ -23,17 +24,19 @@ class Humidifier():
     # if self.status <> 1:
     self.set_status(1)
     self.status = 1
+    self.nominal_status = 1
 
   def on_for(self, active_time):
-    # if self.status <> 1:
     self.on()
     time.sleep(active_time)
     self.off()
+    self.nominal_status = 1
 
   def off(self):
-    # if self.status <> 0:
     self.set_status(0)
     self.status = 0
+    self.nominal_status = 0
 
   def get_status(self):
-    return self.status
+    # convert to boolean
+    return not(not self.nominal_status)
