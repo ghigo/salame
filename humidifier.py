@@ -13,6 +13,10 @@ class Humidifier():
     self.status = 0
     self.nominal_status = 0
 
+  def get_status(self):
+    # convert to boolean
+    return not(not self.nominal_status)
+
   def set_status(self, status):
     if status == 0:
       self.power_relay.off()
@@ -32,11 +36,13 @@ class Humidifier():
     self.off()
     self.nominal_status = 1
 
+  def on_intermittent(self, active_time, sleep):
+    self.on()
+    time.sleep(active_time)
+    self.off()
+
   def off(self):
     self.set_status(0)
     self.status = 0
     self.nominal_status = 0
 
-  def get_status(self):
-    # convert to boolean
-    return not(not self.nominal_status)

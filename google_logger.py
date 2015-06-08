@@ -43,6 +43,7 @@ class Google_spreadsheet(object):
     try:
       # worksheet.append_row((datetime.datetime.now(), temp, humidity))
       self.worksheet.append_row(row)
+      # self.worksheet.insert_row(row, self.worksheet.row_count)
     except:
       # Error appending data, most likely because credentials are stale.
       # Null out the worksheet so a login is performed at the top of the loop.
