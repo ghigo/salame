@@ -10,6 +10,7 @@ import time
 import traceback
 import sys
 
+from setinterval import set_interval
 from google_logger import Google_spreadsheet
 from button import Button
 from humidifier import Humidifier
@@ -35,7 +36,9 @@ settings = {
   'temperature': 15,
   'temperature_tollerance': 0.5,
   'humidity': 80,
-  'humidity_tollerance': 5
+  'humidity_tollerance': 5,
+  'min_temperature_difference': 0.11,
+  'min_humidity_difference': 1.5
 }
 
 # Buffer for google spreadsheet logs. Each item is a row (array)
@@ -83,10 +86,12 @@ class Salame(object):
     # self.tmp_test_button()
     # self.random()
     # self.tmp_relay()
+    # self.interval()
 
     # Create threads
     self.alert_started_worker = threading.Thread(target=self.alert_started)
     self.alert_started_worker.setDaemon(True)
+    # self.fridge_monitor_worker = set_interval(self.fridge_monitor, 30, None, True)
     self.fridge_monitor_worker = threading.Thread(target=self.fridge_monitor)
     self.fridge_monitor_worker.setDaemon(True)
     self.logger_worker = threading.Thread(target=self.write_logs)
@@ -133,23 +138,22 @@ class Salame(object):
   def fridge_monitor(self):
     """monitor fridge components"""
     while True:
-      self.prev_h = self.cur_h
-      self.prev_t = self.cur_t
+      # Ignore tiny differences of temp or himidity
+      # This will prevent the components to activate for a very short time
+      if math.fabs(self.cur_h - self.prev_h) > settings['min_humidity_difference']:
+        self.prev_h = self.cur_h
+      if math.fabs(self.cur_t - self.prev_t) > settings['min_temperature_difference']:
+        self.prev_t = self.cur_t
       humidity, temperature = self.th_sensor.read()
       if humidity is not None and temperature is not None:
         self.led1.blink()
         self.cur_h = humidity
         self.cur_t = temperature
         self.control_elements(humidity, temperature)
-
-        # todo put in a separate thread in order not to interrupt the main program in case of failure or delay
-        # self.data_logger.log([datetime.datetime.now(), humidity, temperature])
+        # log values
         self.log_values(humidity, temperature);
 
-        # self.fridge_monitor_worker = threading.Thread(target=self.fridge_monitor)
-        # self.fridge_monitor_worker.setDaemon(True)
-
-        time.sleep(20)
+        time.sleep(15)
       else:
         self.led1.blink_twice()
 
@@ -210,11 +214,16 @@ class Salame(object):
 
     if humidity > settings['humidity'] + settings['humidity_tollerance']:
       self.fan.on()
+      print "fan on"
       self.humidifier.off()
       print "humid off"
     elif humidity < settings['humidity'] - settings['humidity_tollerance']:
       self.fan.off()
-      humidifier_duration = math.pow(((settings['humidity'] - humidity) / 10 + 1), 3)
+      print "fan off"
+      min_on_time = 1
+      if self.fridge.get_status() == True:
+        min_on_time = 2
+      humidifier_duration = math.pow(((settings['humidity'] - humidity) / 6 + min_on_time), 3)
       self.humidifier.on_for(humidifier_duration)
       print "humidifier on for ", humidifier_duration
     elif humidity > settings['humidity']:
@@ -238,6 +247,14 @@ class Salame(object):
 
 
 # ------------ TEST
+
+  def interval(self):
+    def fun():
+      print "yay!"
+
+    set_interval(fun, 2, 'yatta', True)
+
+
 
   def tmp_relay(self):
     relay = Relay(12, 'tmp_relay')
