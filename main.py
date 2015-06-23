@@ -26,7 +26,7 @@ GDOCS_SPREADSHEET_NAME = 'salame-logs'
 # filepath needs to be an absolute path so that the script run by the root user through crontab can write the logs
 LOG_FILEPATH = '/home/pi/salame/logs.log'
 logging.basicConfig(
-  filename = LOG_FILEPATH,
+  # filename = LOG_FILEPATH,
   level = logging.DEBUG,
   format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -149,9 +149,9 @@ class Salame(object):
         self.led1.blink()
         self.cur_h = humidity
         self.cur_t = temperature
-        self.control_elements(humidity, temperature)
         # log values
-        self.log_values(humidity, temperature);
+        self.log_values(humidity, temperature)
+        self.control_elements(humidity, temperature)
 
         time.sleep(15)
       else:
@@ -224,6 +224,8 @@ class Salame(object):
       if self.fridge.get_status() == True:
         min_on_time = 2
       humidifier_duration = math.pow(((settings['humidity'] - humidity) / 6 + min_on_time), 3)
+      if humidifier_duration >= 60:
+        humidifier_duration = 61
       self.humidifier.on_for(humidifier_duration)
       print "humidifier on for ", humidifier_duration
     elif humidity > settings['humidity']:
