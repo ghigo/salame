@@ -38,6 +38,7 @@ class Humidifier():
     self.advanced_status = 1
 
   def on_for(self, active_time):
+    logging.debug('Humidifier on_for: %s', active_time)
     self.on()
     time.sleep(active_time)
     self.off()
