@@ -26,16 +26,17 @@ GDOCS_SPREADSHEET_NAME = 'salame-logs'
 # filepath needs to be an absolute path so that the script run by the root user through crontab can write the logs
 LOG_FILEPATH = '/home/pi/salame/logs.log'
 logging.basicConfig(
-  # filename = LOG_FILEPATH,
+  filename = LOG_FILEPATH,
   level = logging.DEBUG,
   format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # Settings
 # todo: read values from a file
 settings = {
-  'temperature': 15,
+  #compensare con ... la temperatura
+  'temperature': 12,
   'temperature_tollerance': 0.5,
-  'humidity': 80,
+  'humidity': 82,
   'humidity_tollerance': 5,
   'min_temperature_difference': 0.11,
   'min_humidity_difference': 1.5
@@ -165,7 +166,7 @@ class Salame(object):
           row = remote_logs.pop(0)
           self.data_logger.log(row)
           print "logger wrote a row"
-      time.sleep(30)
+      time.sleep(5)
 
 
   def control_elements(self, humidity, temperature):
@@ -225,9 +226,11 @@ class Salame(object):
         min_on_time = 2
       humidifier_duration = math.pow(((settings['humidity'] - humidity) / 6 + min_on_time), 3)
       if humidifier_duration >= 60:
-        humidifier_duration = 61
-      self.humidifier.on_for(humidifier_duration)
-      print "humidifier on for ", humidifier_duration
+        #humidifier_duration = 61
+        self.humidifier.on()
+      else:
+        self.humidifier.on_for(humidifier_duration)
+        print "humidifier on for ", humidifier_duration
     elif humidity > settings['humidity']:
       self.humidifier.off()
     elif humidity < settings['humidity']:
